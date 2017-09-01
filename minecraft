@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# # # # # # #
+# minecraft folder
+root=/home/$USER/.minecraft
+# saves folder
+saves=$root/saves
+# backup location
+backups="/mnt/store/archive/game/backups/minecraft/back/world1"
+# world path
+world=$saves/world1
+
+# # # # # #
+# run minecraft
+java -jar $root/launcher.jar
+
+# # # # # #
+# get the date and time
+tim=$(date '+%Y-%m-%d-%H.%M.%S')
+# store the backup filename
+backup=$saves/$tim.tar.xz
+#create the tar file of our world
+$(tar caf "$backup" $world)
+# get the sha of our backup and cut the file path
+sn=$(shasum -a 256 "$backup" | cut -d ' ' -f 1)
+# get the filename of the latest backup made
+latestbackup=$(ls -t "$backups" | head -n1)
+# get the sha of the latest backup made and cut the file path
+sb=$(shasum -a 256 "$backups/$latestbackup" | cut -d ' ' -f 1)
+
+# if the shas are the same delete the backup else mv it into the backup folder
+if [ "$sn" = "$sb" ]; then
+	$(rm $backup)
+else
+	$(mv $backup $backups)
+fi
